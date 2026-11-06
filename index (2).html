@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orbit — AI Chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://js.puter.com/v2/"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#090b10;--panel:#10131b;--panel2:#151a24;--line:#242a37;--muted:#929bad;--text:#edf1f8;--accent:#a78bfa;--accent2:#6d5ce8;--green:#73d6ad}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px 'DM Sans',sans-serif;height:100vh;overflow:hidden}button,textarea,select{font:inherit}button{cursor:pointer}
+.app{height:100vh;display:grid;grid-template-columns:270px 1fr;background:radial-gradient(ellipse at 70% -20%,#26204a 0,transparent 42%),var(--bg)}
+.sidebar{border-right:1px solid var(--line);background:rgba(13,16,23,.9);display:flex;flex-direction:column;padding:20px 14px;min-width:0}
+.brand{display:flex;align-items:center;gap:11px;padding:2px 8px 24px;font:700 19px 'Space Grotesk';letter-spacing:-.5px}.logo{width:31px;height:31px;border-radius:11px;background:linear-gradient(135deg,#c4b5fd,#6d5ce8);display:grid;place-items:center;color:#111;font-size:18px;box-shadow:0 5px 22px #8b5cf655}
+.new-chat{border:1px solid #37314f;background:#211c36;color:#e9e3ff;padding:12px 14px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:9px;font-weight:600;transition:.2s}.new-chat:hover{background:#30264d;transform:translateY(-1px)}
+.side-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#717b8d;font-weight:700;padding:25px 9px 10px}.chat-list{overflow:auto;display:flex;flex-direction:column;gap:4px}.chat-item{padding:10px 11px;border-radius:9px;color:#aeb7c7;display:flex;gap:8px;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.chat-item:hover,.chat-item.active{background:#1b202c;color:#fff}.chat-item span{overflow:hidden;text-overflow:ellipsis}.side-bottom{margin-top:auto;border-top:1px solid var(--line);padding:14px 5px 0}.user-card{display:flex;align-items:center;gap:10px;padding:8px;color:#aeb7c7}.avatar{width:30px;height:30px;border-radius:50%;background:#28223f;color:#c4b5fd;display:grid;place-items:center;font-weight:700}.user-meta{min-width:0}.user-meta b{display:block;color:#e7eaf1;font-size:12px}.user-meta small{color:var(--muted);font-size:11px}
+.main{display:flex;flex-direction:column;min-width:0;height:100vh}.topbar{height:66px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#0b0e15b8;backdrop-filter:blur(12px)}.top-left{display:flex;align-items:center;gap:12px}.mobile-menu{display:none}.model-select{appearance:none;background:#151a25;border:1px solid #2a3040;color:#dfe4ef;border-radius:9px;padding:9px 34px 9px 12px;outline:none;max-width:240px}.status{font-size:11px;color:var(--green);display:flex;align-items:center;gap:7px}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px #73d6ad77}
+.top-actions{display:flex;gap:8px}.icon-btn{border:1px solid var(--line);background:#141923;color:#9da7b8;width:35px;height:35px;border-radius:9px;display:grid;place-items:center}.icon-btn:hover{color:white;background:#202635}
+.content{flex:1;overflow:auto;scroll-behavior:smooth}.welcome{height:100%;min-height:440px;display:flex;align-items:center;justify-content:center;padding:32px}.welcome-inner{max-width:720px;width:100%;text-align:center;margin-top:-25px}.orb{width:62px;height:62px;border-radius:22px;margin:0 auto 23px;background:linear-gradient(145deg,#c4b5fd,#7764ed 70%,#5141bc);display:grid;place-items:center;font-size:29px;color:#141020;box-shadow:0 10px 50px #8067ed33}.welcome h1{font:600 clamp(28px,4vw,42px) 'Space Grotesk';letter-spacing:-1.5px;margin:0 0 12px}.welcome p{color:var(--muted);font-size:15px;margin:0 auto 30px;max-width:490px;line-height:1.65}.suggestions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;text-align:left}.suggestion{background:#111620;border:1px solid #262d3b;border-radius:13px;padding:15px;color:#dfe4ee;text-align:left;transition:.2s}.suggestion:hover{border-color:#7461c9;background:#171a29;transform:translateY(-2px)}.suggestion b{display:block;font-size:13px;margin-bottom:5px}.suggestion small{color:#8994a7;line-height:1.4}
+.messages{max-width:850px;margin:0 auto;padding:34px 26px 46px;display:flex;flex-direction:column;gap:25px}.message{display:grid;grid-template-columns:34px 1fr;gap:13px;animation:appear .22s ease}.message.user{grid-template-columns:1fr 34px}.message.user .msg-avatar{grid-column:2;grid-row:1;background:#30294b;color:#c4b5fd}.message.user .bubble{grid-column:1;grid-row:1;justify-self:end;background:#1b1d2a;border:1px solid #302c43;border-radius:16px 5px 16px 16px;max-width:85%}.msg-avatar{width:31px;height:31px;border-radius:11px;background:#211d37;color:#b8a8ff;display:grid;place-items:center;font-weight:700}.bubble{min-width:0;line-height:1.72;padding:3px 0;color:#dbe1ec;overflow-wrap:anywhere}.bubble p{margin:0 0 12px}.bubble p:last-child{margin-bottom:0}.bubble h1,.bubble h2,.bubble h3{font-family:'Space Grotesk';line-height:1.3;margin:20px 0 9px}.bubble h1{font-size:23px}.bubble h2{font-size:19px}.bubble h3{font-size:16px}.bubble ul,.bubble ol{padding-left:23px}.bubble li{margin:5px 0}.bubble code{font-family:ui-monospace,monospace;background:#242938;padding:2px 5px;border-radius:5px;font-size:.9em}.bubble pre{background:#0a0d13;border:1px solid #292f3d;border-radius:11px;padding:15px;overflow:auto}.bubble pre code{background:none;padding:0}.bubble blockquote{border-left:3px solid #8270db;padding-left:13px;color:#aeb7c7;margin-left:0}.bubble a{color:#b9a8ff}.msg-tools{display:flex;gap:7px;margin-top:10px;opacity:0;transition:.2s}.message:hover .msg-tools{opacity:1}.mini-btn{background:transparent;border:0;color:#7e899b;font-size:11px;padding:3px 5px}.mini-btn:hover{color:#ddd}.typing{display:flex;gap:5px;padding:8px 0}.typing i{width:6px;height:6px;border-radius:50%;background:#9b8be8;animation:bounce 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+.composer-wrap{padding:15px 24px 20px;background:linear-gradient(transparent,#090b10 25%)}.composer{max-width:850px;margin:0 auto;border:1px solid #343044;background:#131722;border-radius:17px;padding:12px 13px 10px;box-shadow:0 12px 40px #0005}.composer:focus-within{border-color:#7868c9;box-shadow:0 0 0 3px #8b78f018,0 12px 40px #0005}.composer textarea{width:100%;resize:none;max-height:180px;min-height:28px;background:transparent;border:0;outline:0;color:#f1f3f8;padding:4px 5px 9px;line-height:1.5}.composer textarea::placeholder{color:#707b8e}.composer-bottom{display:flex;align-items:center;justify-content:space-between}.hint{font-size:10px;color:#687386;padding-left:5px}.send{width:35px;height:35px;border:0;border-radius:10px;background:#a78bfa;color:#171126;font-size:17px;font-weight:700;display:grid;place-items:center}.send:hover{background:#c0adff}.send:disabled{opacity:.4;cursor:not-allowed}.stop{background:#38272d;color:#ffb3bf}.footer-note{text-align:center;font-size:10px;color:#596273;margin-top:10px}.footer-note a{color:#8e82c9;text-decoration:none}.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#282e3c;border:1px solid #42495a;color:#f2f4f8;padding:10px 15px;border-radius:10px;display:none;z-index:9}
+@keyframes appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}
+@media(max-width:760px){.app{grid-template-columns:1fr}.sidebar{position:fixed;z-index:5;inset:0 auto 0 0;width:275px;transform:translateX(-100%);transition:.25s;box-shadow:20px 0 50px #0008}.sidebar.open{transform:translateX(0)}.mobile-menu{display:grid}.topbar{padding:0 14px}.messages{padding:23px 15px 35px}.composer-wrap{padding:10px 12px 15px}.welcome{padding:20px}.suggestions{grid-template-columns:1fr}.status{display:none}.model-select{max-width:190px}.message.user .bubble{max-width:94%}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="logo">✳</div> orbit<span style="color:#9c89f4">.</span></div>
+    <button class="new-chat" id="newChat"><span>＋</span> New chat</button>
+    <div class="side-label">Your conversations</div>
+    <div class="chat-list" id="chatList"></div>
+    <div class="side-bottom">
+      <div class="user-card"><div class="avatar" id="userAvatar">O</div><div class="user-meta"><b id="userName">Guest session</b><small id="userStatus">Powered by Puter.js</small></div></div>
+    </div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <div class="top-left">
+        <button class="icon-btn mobile-menu" id="menuBtn" aria-label="Open menu">☰</button>
+        <select class="model-select" id="modelSelect" aria-label="AI model"><option value="gpt-5.4-nano">GPT-5.4 Nano · default</option></select>
+        <div class="status"><span class="dot"></span> AI ready</div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="clearBtn" title="Clear current chat">⌫</button>
+      </div>
+    </header>
+    <section class="content" id="content">
+      <div class="welcome" id="welcome">
+        <div class="welcome-inner">
+          <div class="orb">✳</div>
+          <h1>What’s on your mind?</h1>
+          <p>A thoughtful AI companion for ideas, questions, writing, and everything in between.</p>
+          <div class="suggestions">
+            <button class="suggestion" data-prompt="Explain a complicated topic in simple terms."><b>✧ Learn something</b><small>Break down a complicated topic in simple terms</small></button>
+            <button class="suggestion" data-prompt="Help me brainstorm creative ideas for a project."><b>✎ Brainstorm ideas</b><small>Explore fresh angles for your next project</small></button>
+            <button class="suggestion" data-prompt="Help me write a clear, engaging message."><b>⌁ Write something</b><small>Draft, rewrite, or polish your words</small></button>
+            <button class="suggestion" data-prompt="Give me a practical step-by-step plan to reach a goal."><b>↗ Make a plan</b><small>Turn a goal into manageable next steps</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="messages" id="messages" hidden></div>
+    </section>
+    <div class="composer-wrap">
+      <div class="composer">
+        <textarea id="prompt" rows="1" placeholder="Message Orbit…" aria-label="Message"></textarea>
+        <div class="composer-bottom"><span class="hint">Enter to send · Shift + Enter for a new line</span><button class="send" id="sendBtn" aria-label="Send message">↑</button></div>
+      </div>
+      <div class="footer-note">AI can make mistakes. Verify important information. · <a href="https://developer.puter.com" target="_blank" rel="noopener">Powered by Puter</a></div>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const STORAGE_KEY = 'orbit-chat-v1';
+  const DEFAULT_MODEL = 'gpt-5.4-nano';
+  let chats = [];
+  let activeId = null;
+  let busy = false;
+  let abortController = null;
+  let user = null;
+
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const escapeHTML = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const currentChat = () => chats.find(c => c.id === activeId);
+  const toast = message => { $('toast').textContent = message; $('toast').style.display = 'block'; clearTimeout(toast.timer); toast.timer = setTimeout(() => $('toast').style.display = 'none', 2800); };
+  const save = () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({chats,activeId,model:$('modelSelect').value})); } catch(e) { console.warn('Could not save chat history',e); } };
+  const load = () => {
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      chats = Array.isArray(data.chats) ? data.chats : [];
+      activeId = data.activeId || null;
+      if (data.model) $('modelSelect').value = data.model;
+    } catch(e) { chats = []; }
+    if (!currentChat()) createChat(false);
+    renderAll();
+  };
+  function createChat(shouldSave=true) {
+    const chat = {id:uid(), title:'New conversation', messages:[], created:Date.now()};
+    chats.unshift(chat); activeId = chat.id;
+    if (shouldSave) save();
+    renderAll();
+    $('prompt').focus();
+  }
+  function renderSidebar() {
+    $('chatList').innerHTML = chats.map(c => `<div class="chat-item ${c.id===activeId?'active':''}" data-id="${c.id}" title="${escapeHTML(c.title)}"><span>◷</span><span>${escapeHTML(c.title)}</span></div>`).join('');
+    $('chatList').querySelectorAll('.chat-item').forEach(el => el.addEventListener('click', () => { activeId=el.dataset.id; renderAll(); save(); $('sidebar').classList.remove('open'); }));
+  }
+  function renderAll() {
+    renderSidebar();
+    const chat = currentChat();
+    const hasMessages = chat && chat.messages.length;
+    $('welcome').hidden = !!hasMessages;
+    $('messages').hidden = !hasMessages;
+    $('messages').innerHTML = '';
+    if (hasMessages) chat.messages.forEach((m,i) => appendMessage(m.role,m.content,i,false));
+    scrollBottom();
+  }
+  function markdown(text) {
+    if (!window.marked || !window.DOMPurify) return `<p>${escapeHTML(text).replace(/\n/g,'<br>')}</p>`;
+    marked.setOptions({breaks:true,gfm:true});
+    return DOMPurify.sanitize(marked.parse(text || ''));
+  }
+  function appendMessage(role, content, index, scroll=true) {
+    const el = document.createElement('article');
+    el.className = `message ${role}`;
+    const avatar = role === 'user' ? 'Y' : '✳';
+    el.innerHTML = `<div class="msg-avatar">${avatar}</div><div class="bubble">${markdown(content)}</div>`;
+    if (role === 'assistant' && index !== null) {
+      const tools = document.createElement('div'); tools.className='msg-tools';
+      const copy = document.createElement('button'); copy.className='mini-btn'; copy.textContent='Copy'; copy.onclick=()=>navigator.clipboard?.writeText(content).then(()=>toast('Copied to clipboard')).catch(()=>toast('Copy unavailable'));
+      tools.append(copy); el.querySelector('.bubble').append(tools);
+    }
+    $('messages').append(el);
+    if (scroll) scrollBottom();
+    return el.querySelector('.bubble');
+  }
+  function scrollBottom() { $('content').scrollTop = $('content').scrollHeight; }
+  function setBusy(value) {
+    busy = value;
+    $('sendBtn').textContent = value ? '■' : '↑';
+    $('sendBtn').classList.toggle('stop',value);
+    $('sendBtn').setAttribute('aria-label',value?'Stop generating':'Send message');
+    $('prompt').disabled = value;
+  }
+  async function sendMessage(text) {
+    const prompt = (text ?? $('prompt').value).trim();
+    if (!prompt || busy) return;
+    if (!window.puter?.ai?.chat) { toast('Puter.js did not load. Check your connection and refresh.'); return; }
+    let chat = currentChat();
+    if (!chat) { createChat(false); chat=currentChat(); }
+    $('prompt').value=''; resizeInput();
+    chat.messages.push({role:'user',content:prompt});
+    if (chat.messages.length===1) chat.title=prompt.slice(0,42)+(prompt.length>42?'…':'');
+    $('welcome').hidden=true; $('messages').hidden=false;
+    appendMessage('user',prompt,null);
+    const assistantBubble = appendMessage('assistant','',chat.messages.length,true);
+    const typing = document.createElement('div'); typing.className='typing'; typing.innerHTML='<i></i><i></i><i></i>'; assistantBubble.append(typing);
+    setBusy(true); abortController = new AbortController();
+    save(); renderSidebar();
+    try {
+      const history = chat.messages.map(m=>({role:m.role,content:m.content}));
+      const response = await puter.ai.chat(history, {
+        model: $('modelSelect').value || DEFAULT_MODEL,
+        stream: true,
+        signal: abortController.signal
+      });
+      let answer='';
+      for await (const part of response) {
+        if (part.type === 'error') throw new Error(part.message || 'The model returned an error.');
+        if (part.type === 'text') {
+          answer += part.text || '';
+          typing.remove();
+          assistantBubble.innerHTML = markdown(answer);
+          scrollBottom();
+        }
+      }
+      if (!answer.trim()) answer = 'I didn’t receive a text response. Try again or choose another model.';
+      typing.remove();
+      assistantBubble.innerHTML = markdown(answer);
+      chat.messages.push({role:'assistant',content:answer});
+      const copyWrap = document.createElement('div'); copyWrap.className='msg-tools';
+      const copy = document.createElement('button'); copy.className='mini-btn'; copy.textContent='Copy'; copy.onclick=()=>navigator.clipboard?.writeText(answer).then(()=>toast('Copied to clipboard')).catch(()=>toast('Copy unavailable'));
+      copyWrap.append(copy); assistantBubble.append(copyWrap);
+      save();
+    } catch(err) {
+      typing.remove();
+      const msg = err.name === 'AbortError' ? 'Generation stopped.' : `Sorry, something went wrong: ${err.message || err}`;
+      assistantBubble.innerHTML = markdown(msg);
+      if (err.name !== 'AbortError') toast('AI request failed. Check Puter sign-in or model availability.');
+      if (err.name !== 'AbortError') chat.messages.push({role:'assistant',content:msg});
+      save();
+    } finally {
+      setBusy(false); abortController=null; $('prompt').disabled=false; $('prompt').focus();
+    }
+  }
+  function resizeInput() { const el=$('prompt'); el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,180)+'px'; }
+  $('newChat').onclick=()=>createChat();
+  $('sendBtn').onclick=()=>{ if(busy){abortController?.abort();return;} sendMessage(); };
+  $('prompt').addEventListener('input',resizeInput);
+  $('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
+  $('modelSelect').addEventListener('change',save);
+  $('clearBtn').onclick=()=>{ const c=currentChat(); if(!c||!c.messages.length)return; if(confirm('Clear all messages in this conversation?')){c.messages=[];c.title='New conversation';save();renderAll();} };
+  $('menuBtn').onclick=()=> $('sidebar').classList.toggle('open');
+  document.querySelectorAll('.suggestion').forEach(b=>b.addEventListener('click',()=>sendMessage(b.dataset.prompt)));
+  async function initPuter() {
+    try {
+      if (puter.auth?.isSignedIn && await puter.auth.isSignedIn()) {
+        user = await puter.auth.getUser();
+      }
+      if (!user && puter.auth?.signIn) {
+        // Puter may prompt for sign-in/authorization when the first AI request is made.
+        $('userStatus').textContent='Ready to connect';
+      } else if (user) {
+        $('userName').textContent=user.username || user.name || 'Puter user';
+        $('userAvatar').textContent=(user.username || 'P').slice(0,1).toUpperCase();
+        $('userStatus').textContent='Connected with Puter';
+      }
+      if (puter.ai?.listModels) {
+        const models = await puter.ai.listModels();
+        const select=$('modelSelect');
+        const saved=select.value || DEFAULT_MODEL;
+        const entries=Array.isArray(models)?models:[];
+        if(entries.length){
+          const options=entries.map(m=>{
+            const id=typeof m==='string'?m:(m.id||m.name||m.model);
+            const label=typeof m==='string'?m:(m.name||m.id||m.model);
+            return id?{id,label}:null;
+          }).filter(Boolean);
+          if(options.length){
+            select.innerHTML='';
+            options.forEach(m=>{const opt=document.createElement('option');opt.value=m.id;opt.textContent=m.label;select.append(opt);});
+            if(options.some(m=>m.id===saved))select.value=saved;
+            else if(options.some(m=>m.id===DEFAULT_MODEL))select.value=DEFAULT_MODEL;
+          }
+        }
+      }
+    } catch(e) { console.info('Puter initialization will continue on first request.',e); }
+  }
+  load(); initPuter();
+})();
+</script>
+</body>
+</html>
